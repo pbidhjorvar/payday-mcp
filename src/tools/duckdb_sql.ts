@@ -1,14 +1,8 @@
 // src/tools/duckdb_sql.ts
 import { z } from "zod";
 
-// Try to import DuckDB, fallback gracefully if not available
-let duckdb: any;
-try {
-  duckdb = require("duckdb");
-} catch (error) {
-  console.warn("DuckDB not available - SQL tools will return error messages");
-  duckdb = null;
-}
+// Import DuckDB - should be available after npm install  
+import duckdb from "duckdb";
 
 const DB_PATH = "duckdb/finance.duckdb";
 
@@ -56,23 +50,26 @@ function assertSelectOnly(sql: string) {
 }
 
 function connectRO(): any {
-  if (!duckdb) {
-    throw new Error("DuckDB is not installed. Please run: npm install duckdb");
-  }
-  // @ts-ignore (node-duckdb supports options)
-  return new duckdb.Database(DB_PATH, { readonly: true });
+  // Connect to existing database file
+  return new duckdb.Database(DB_PATH);
 }
 
 function all<T=any>(sql: string, params: any[] = []): Promise<T[]> {
-  if (!duckdb) {
-    return Promise.reject(new Error("DuckDB is not installed. Please run: npm install duckdb"));
-  }
   const db = connectRO();
   return new Promise((resolve, reject) => {
-    db.all(sql, params, (err: any, rows: T[]) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
+    if (params.length === 0) {
+      // No parameters - use simple all() call
+      db.all(sql, (err: any, rows: any) => {
+        if (err) reject(err);
+        else resolve(rows as T[]);
+      });
+    } else {
+      // With parameters
+      db.all(sql, params, (err: any, rows: any) => {
+        if (err) reject(err);
+        else resolve(rows as T[]);
+      });
+    }
   });
 }
 
