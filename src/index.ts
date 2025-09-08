@@ -149,20 +149,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     // Validate input
     const validatedInput = tool.inputSchema.parse(args);
     
-    // Execute tool
-    let result;
-    if (tool.name.startsWith('duckdb_')) {
-      // DuckDB tools don't need Payday client parameters
-      result = await tool.handler(validatedInput);
-    } else {
-      // Payday API tools need client parameters
-      result = await tool.handler(
-        validatedInput,
-        currentProfileName,
-        currentProfile,
-        paydayClient
-      );
-    }
+    // Execute tool (all tools now use the same signature)
+    const result = await tool.handler(
+      validatedInput,
+      currentProfileName,
+      currentProfile,
+      paydayClient
+    );
     
     return {
       content: [

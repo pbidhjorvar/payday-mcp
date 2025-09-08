@@ -1,6 +1,14 @@
 // src/tools/duckdb_sql.ts
 import { z } from "zod";
-import duckdb from "duckdb";
+
+// Try to import DuckDB, fallback gracefully if not available
+let duckdb: any;
+try {
+  duckdb = require("duckdb");
+} catch (error) {
+  console.warn("DuckDB not available - SQL tools will return error messages");
+  duckdb = null;
+}
 
 const DB_PATH = "duckdb/finance.duckdb";
 
@@ -47,12 +55,18 @@ function assertSelectOnly(sql: string) {
   // Encourage schema-qualified names; not a hard fail, but we check obvious DDL bypasses above.
 }
 
-function connectRO(): duckdb.Database {
+function connectRO(): any {
+  if (!duckdb) {
+    throw new Error("DuckDB is not installed. Please run: npm install duckdb");
+  }
   // @ts-ignore (node-duckdb supports options)
   return new duckdb.Database(DB_PATH, { readonly: true });
 }
 
 function all<T=any>(sql: string, params: any[] = []): Promise<T[]> {
+  if (!duckdb) {
+    return Promise.reject(new Error("DuckDB is not installed. Please run: npm install duckdb"));
+  }
   const db = connectRO();
   return new Promise((resolve, reject) => {
     db.all(sql, params, (err: any, rows: T[]) => {
@@ -71,7 +85,7 @@ export const duckdb_list_objects = {
   inputSchema: z.object({
     schema: z.string().optional() // if omitted, returns all allowed schemas
   }),
-  handler: async (input: { schema?: string }) => {
+  handler: async (input: { schema?: string }, _profileName?: string, _profile?: any, _client?: any) => {
     const schemaFilter = input.schema ? `AND table_schema = '${input.schema}'` : "";
     const sql = `
       SELECT table_schema AS schema, table_name AS name, table_type AS type
@@ -93,7 +107,7 @@ export const duckdb_table_info = {
     schema: z.string(),
     table: z.string()
   }),
-  handler: async (input: { schema: string; table: string }) => {
+  handler: async (input: { schema: string; table: string }, _profileName?: string, _profile?: any, _client?: any) => {
     if (!ALLOWED_SCHEMAS.has(input.schema)) {
       throw new Error(`Schema not allowed: ${input.schema}`);
     }
@@ -115,7 +129,7 @@ export const duckdb_explain = {
   inputSchema: z.object({
     sql: z.string()
   }),
-  handler: async (input: { sql: string }) => {
+  handler: async (input: { sql: string }, _profileName?: string, _profile?: any, _client?: any) => {
     assertSelectOnly(input.sql);
     const plan = await all<{explain:string}>(`EXPLAIN ${sanitizeSql(input.sql)}`);
     return { plan: plan.map(r => r.explain).join("\n") };
@@ -132,7 +146,7 @@ export const duckdb_sql_select = {
     max_rows: z.number().default(5000),
     format: z.enum(["json","csv","markdown"]).default("json")
   }),
-  handler: async (input: { sql: string; params?: any[]; max_rows?: number; format?: "json"|"csv"|"markdown" }) => {
+  handler: async (input: { sql: string; params?: any[]; max_rows?: number; format?: "json"|"csv"|"markdown" }, _profileName?: string, _profile?: any, _client?: any) => {
     const { sql, params = [], max_rows = 5000, format = "json" } = input;
     assertSelectOnly(sql);
 
