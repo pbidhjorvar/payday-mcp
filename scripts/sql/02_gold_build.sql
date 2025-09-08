@@ -122,23 +122,23 @@ ORDER BY 1,2;
 -- === Account detail view (for drill-down) ===
 CREATE OR REPLACE VIEW gold.v_account_detail AS
 SELECT
-  account_code,
-  account_name,
-  acct_type,
-  acct_subtype,
-  report_group,
-  report_subgroup,
-  statement,
-  sign,
-  is_active,
-  COUNT(CASE WHEN statement = 'PL' THEN 1 END) AS pl_txn_count,
-  COUNT(CASE WHEN statement = 'BS' THEN 1 END) AS bs_txn_count,
-  SUM(CASE WHEN statement = 'PL' THEN signed_amount ELSE 0 END) AS pl_total,
-  SUM(CASE WHEN statement = 'BS' THEN signed_amount ELSE 0 END) AS bs_balance
+  a.account_code,
+  a.account_name,
+  a.acct_type,
+  a.acct_subtype,
+  a.report_group,
+  a.report_subgroup,
+  a.statement,
+  a.sign,
+  a.is_active,
+  COUNT(CASE WHEN f.statement = 'PL' THEN 1 END) AS pl_txn_count,
+  COUNT(CASE WHEN f.statement = 'BS' THEN 1 END) AS bs_txn_count,
+  SUM(CASE WHEN f.statement = 'PL' THEN f.signed_amount ELSE 0 END) AS pl_total,
+  SUM(CASE WHEN f.statement = 'BS' THEN f.signed_amount ELSE 0 END) AS bs_balance
 FROM gold.fact_txn f
 RIGHT JOIN gold.dim_account a ON a.account_code = f.account_code
 GROUP BY 1,2,3,4,5,6,7,8,9
-ORDER BY report_group, report_subgroup, account_code;
+ORDER BY a.report_group, a.report_subgroup, a.account_code;
 
 -- === Monthly summary (all statements) ===
 CREATE OR REPLACE VIEW gold.v_monthly_summary AS
@@ -149,7 +149,7 @@ SELECT
   SUM(CASE WHEN statement='PL' AND report_group IN ('COGS','OPEX','Finance Costs','Tax') THEN signed_amount ELSE 0 END) AS total_expenses,
   SUM(CASE WHEN statement='BS' AND report_group='Assets' THEN signed_amount ELSE 0 END) AS total_assets,
   SUM(CASE WHEN statement='BS' AND report_group='Liabilities' THEN signed_amount ELSE 0 END) AS total_liabilities,
-  COUNT(DISTINCT account_code) AS active_accounts,
+  COUNT(DISTINCT f.account_code) AS active_accounts,
   COUNT(*) AS total_transactions
 FROM gold.fact_txn
 GROUP BY 1,2
