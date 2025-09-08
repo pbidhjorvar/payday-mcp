@@ -1,0 +1,12 @@
+{
+  "test": {
+    "base_url": "https://api.test.payday.is",
+    "company_id": null,
+    "read_only": true
+  },
+  "prod": {
+    "base_url": "https://api.payday.is",
+    "company_id": null,
+    "read_only": true
+  }
+}

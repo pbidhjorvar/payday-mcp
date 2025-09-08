@@ -1,0 +1,17 @@
+acct_type,acct_subtype,report_group,report_subgroup,statement,sign
+Tekjur,Tekjur,Revenue,Operating Revenue,PL,-1
+Tekjur,Aðrar tekjur,Revenue,Other Revenue,PL,-1
+Tekjur,Fjármagnstekjur,Revenue,Financial Income,PL,-1
+Gjöld,Kostnaðarverð seldra vara/þjónustu,COGS,COGS,PL,1
+Gjöld,Laun og launatengd gjöld,OPEX,Payroll,PL,1
+Gjöld,Annar rekstrarkostnaður,OPEX,Other Opex,PL,1
+Gjöld,Afskriftir,OPEX,Depreciation,PL,1
+Gjöld,Tekjuskattur,Tax,Income Tax,PL,1
+Gjöld,Fjármagnsgjöld,Finance Costs,Interest Expense,PL,1
+Eignir,Fastafjármunir (langtímaeignir),Assets,Fixed Assets,BS,1
+Eignir,Sjóður bankainnstæður og annað reiðufé,Assets,Cash and Cash Equivalents,BS,1
+Eignir,Birgðir,Assets,Inventory,BS,1
+Eignir,Aðrir veltufjármunir (skammtímaeignir),Assets,Current Assets,BS,1
+Skuldir,Langtímaskuldir,Liabilities,Long-term Liabilities,BS,-1
+Skuldir,Virðisaukaskattur,Liabilities,VAT Liabilities,BS,-1
+Skuldir,Skammtímaskuldir,Liabilities,Current Liabilities,BS,-1
