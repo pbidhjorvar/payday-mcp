@@ -193,3 +193,66 @@ Common error scenarios:
    ```
 
 Remember: The tools automatically handle authentication, pagination (where appropriate), and provide rich metadata about API calls including duration and item counts. Use DuckDB SQL tools for complex analysis and reporting on historical financial data.
+
+## Debugging & Troubleshooting
+
+### MCP Server Configuration
+The server is configured in Claude Desktop's configuration file:
+- **Windows**: `C:\Users\DaníelHjörvar\AppData\Roaming\Claude\claude_desktop_config.json`
+- **Current setup**: Uses compiled version at `C:\Projects\Payday-MCP\dist\index.js`
+
+### Debug Logging
+The server includes debug logging for journal entry operations:
+- Debug logs are written to stderr when journal entries are processed
+- Logs show parameter parsing, schema validation, and API requests
+- To see logs: Check Claude Desktop's console or restart Claude Desktop after rebuild
+
+### Common Issues
+
+#### Journal Entry "Invalid request data" Errors
+If journal entries fail with generic "Invalid request data" errors:
+
+1. **Check account IDs**: Use `payday_get_accounts` to verify ledgerAccountId values exist
+2. **Verify date format**: Must be YYYY-MM-DD (e.g., "2025-09-10")  
+3. **Ensure balance**: Total of all line amounts should equal zero
+4. **Restart Claude Desktop**: After server code changes, restart to load latest version
+
+#### MCP Parameter Serialization
+- Arrays are automatically parsed from JSON strings if needed
+- Complex parameters (lines, filters) are handled transparently
+- If you see "Expected array, received string", restart Claude Desktop
+
+### Testing Journal Entries
+For debugging journal entry issues:
+
+1. **Get valid accounts first**:
+   ```
+   payday_get_accounts
+   ```
+
+2. **Use simple test entry**:
+   ```json
+   {
+     "date": "2025-09-10",
+     "description": "Test entry",
+     "lines": [
+       {
+         "amount": 1000,
+         "ledgerAccountId": "valid-account-uuid-1"
+       },
+       {
+         "amount": -1000,
+         "ledgerAccountId": "valid-account-uuid-2"
+       }
+     ]
+   }
+   ```
+
+3. **Check Claude Desktop logs** for detailed error information
+
+### Rebuilding After Changes
+After making code changes:
+```bash
+npm run build  # Rebuilds dist/index.js used by Claude Desktop
+```
+Then restart Claude Desktop to load the updated version.
