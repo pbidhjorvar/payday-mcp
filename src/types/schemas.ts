@@ -106,7 +106,7 @@ export const updateInvoiceSchema = z.object({
 
 const journalLineSchema = z.object({
   amount: z.number().describe('Line amount (required)'),
-  vatPercentType: z.enum(['NoVAT', 'ReducedVAT', 'StandardVAT']).optional().describe('VAT percent type - if set, amount includes VAT'),
+  vatPercentType: z.enum(['NoVAT', 'ReducedVAT', 'StandardVAT', 'NotSet']).optional().describe('VAT percent type - if set, amount includes VAT'),
   ledgerAccountId: z.string().optional().describe('Ledger account UID'),
   customerId: z.string().optional().describe('Customer UID (debtor entry)'),
   creditorId: z.string().optional().describe('Creditor UID'),
