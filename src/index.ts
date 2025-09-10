@@ -22,7 +22,7 @@ import { getCompanyTool } from './tools/company.js';
 import { getAccountsTool, getAccountStatementTool } from './tools/accounting.js';
 import { getSalesOrdersTool } from './tools/salesorders.js';
 import { createJournalEntryTool, updateJournalEntryTool, getJournalEntriesTool } from './tools/journal.js';
-import { duckdb_list_objects, duckdb_table_info, duckdb_explain, duckdb_sql_select } from './tools/duckdb_sql.js';
+import { sqlite_list_objects, sqlite_table_info, sqlite_explain, sqlite_sql_select } from './tools/sqlite_sql.js';
 
 // Initialize configuration
 const env = loadEnv();
@@ -56,11 +56,11 @@ const tools = [
   createJournalEntryTool,
   updateJournalEntryTool,
   getJournalEntriesTool,
-  // DuckDB SQL tools (no Payday client needed)
-  duckdb_list_objects,
-  duckdb_table_info,
-  duckdb_explain,
-  duckdb_sql_select,
+  // SQLite SQL tools (no Payday client needed)
+  sqlite_list_objects,
+  sqlite_table_info,
+  sqlite_explain,
+  sqlite_sql_select,
 ];
 
 // Initialize MCP server
