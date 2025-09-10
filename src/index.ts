@@ -114,12 +114,41 @@ function zodTypeToJsonSchema(zodType: any): any {
       return { type: 'string' };
     case 'ZodNumber':
       return { type: 'number' };
+    case 'ZodBoolean':
+      return { type: 'boolean' };
     case 'ZodOptional':
       return zodTypeToJsonSchema(zodType._def.innerType);
     case 'ZodArray':
       return {
         type: 'array',
         items: zodTypeToJsonSchema(zodType._def.type),
+      };
+    case 'ZodObject':
+      const shape = zodType._def?.shape;
+      if (!shape) return { type: 'object' };
+      
+      const properties: any = {};
+      for (const [key, value] of Object.entries(shape)) {
+        properties[key] = zodTypeToJsonSchema(value as any);
+      }
+      
+      return {
+        type: 'object',
+        properties,
+        additionalProperties: false,
+      };
+    case 'ZodRefined':
+      // Handle refined schemas (like our journal line validation)
+      return zodTypeToJsonSchema(zodType._def.schema);
+    case 'ZodEnum':
+      return {
+        type: 'string',
+        enum: zodType._def.values,
+      };
+    case 'ZodUnion':
+      // Handle union types
+      return {
+        oneOf: zodType._def.options.map((option: any) => zodTypeToJsonSchema(option)),
       };
     default:
       return { type: 'string' };
@@ -146,8 +175,45 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 
   try {
+    // Debug logging for journal entry tool
+    if (name === 'payday_create_journal_entry' && args) {
+      console.error('[DEBUG] Raw args received:', JSON.stringify(args, null, 2));
+      console.error('[DEBUG] Type of args:', typeof args);
+      console.error('[DEBUG] Type of args.lines:', typeof (args as any).lines);
+      if ((args as any).lines) {
+        console.error('[DEBUG] Is args.lines an array?:', Array.isArray((args as any).lines));
+        console.error('[DEBUG] args.lines value:', (args as any).lines);
+      }
+    }
+    
+    // Handle potential string-encoded JSON in parameters
+    let processedArgs = { ...(args || {}) };
+    
+    // Check if lines is a string that needs to be parsed as JSON
+    if (name === 'payday_create_journal_entry' && typeof processedArgs.lines === 'string') {
+      try {
+        console.error('[DEBUG] Attempting to parse lines as JSON string...');
+        processedArgs.lines = JSON.parse(processedArgs.lines);
+        console.error('[DEBUG] Successfully parsed lines:', processedArgs.lines);
+      } catch (e: any) {
+        console.error('[DEBUG] Failed to parse lines as JSON:', e.message);
+      }
+    }
+    
+    // For all tools, check if any parameter that should be an array/object is actually a string
+    for (const [key, value] of Object.entries(processedArgs)) {
+      if (typeof value === 'string' && (value.startsWith('[') || value.startsWith('{'))) {
+        try {
+          processedArgs[key] = JSON.parse(value);
+          console.error(`[DEBUG] Parsed ${key} from JSON string`);
+        } catch (e) {
+          // Keep as string if parse fails
+        }
+      }
+    }
+    
     // Validate input
-    const validatedInput = tool.inputSchema.parse(args);
+    const validatedInput = tool.inputSchema.parse(processedArgs);
     
     // Execute tool (all tools now use the same signature)
     const result = await tool.handler(

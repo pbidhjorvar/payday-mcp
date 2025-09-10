@@ -134,7 +134,11 @@ export class PaydayClient {
 
           // Don't retry on client errors (4xx except 401, 429)
           if (status >= 400 && status < 500) {
-            throw new pRetry.AbortError(mapHttpError(status, data));
+            const apiError = mapHttpError(status, data);
+            const abortError = new Error('Client error - do not retry') as any;
+            abortError.name = 'AbortError';
+            abortError.originalError = apiError;
+            throw abortError;
           }
         }
 
@@ -151,7 +155,7 @@ export class PaydayClient {
       factor: 2,
       minTimeout: 1000,
       maxTimeout: 10000,
-      onFailedAttempt: (error) => {
+      onFailedAttempt: (error: any) => {
         logger.info('Retrying request', {
           path,
           attempt: error.attemptNumber,
@@ -159,9 +163,9 @@ export class PaydayClient {
           error: error.message
         });
       }
-    }).catch((error) => {
+    }).catch((error: any) => {
       // If it's an AbortError, return the wrapped ApiError
-      if (error instanceof pRetry.AbortError) {
+      if (error.name === 'AbortError' && error.originalError) {
         return error.originalError as ApiError;
       }
       // For other errors, map to ApiError
