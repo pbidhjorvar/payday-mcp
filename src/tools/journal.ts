@@ -13,6 +13,11 @@ export const createJournalEntryTool = {
     profile: Profile,
     client: PaydayClient
   ) => {
+    // Debug logging for journal entry creation
+    console.error('[JOURNAL] Input received:', JSON.stringify(input, null, 2));
+    console.error('[JOURNAL] Type of input.lines:', typeof input.lines);
+    console.error('[JOURNAL] Is input.lines an array?:', Array.isArray(input.lines));
+    
     // Check read-only mode
     if (profile.read_only) {
       return {
@@ -32,12 +37,10 @@ export const createJournalEntryTool = {
       date: input.date,
       description: input.description,
       lines: input.lines,
+      status: input.status || 'DRAFT', // Default to DRAFT if not specified
     };
-
-    // Add optional status (defaults to DRAFT if not specified)
-    if (input.status) {
-      requestBody.status = input.status;
-    }
+    
+    console.error('[JOURNAL] Request body to send:', JSON.stringify(requestBody, null, 2));
 
     const result = await client.post('/accounting/journal', requestBody);
     
