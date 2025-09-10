@@ -106,14 +106,16 @@ export const sqlite_list_objects = {
         AND name NOT LIKE 'sqlite_%'
       `;
       
+      let params: any[] = [];
       if (input.prefix) {
-        sql += ` AND name LIKE '${input.prefix}%'`;
+        sql += ` AND name LIKE ?`;
+        params.push(`${input.prefix}%`);
       }
       
       sql += ` ORDER BY schema, type, name`;
       
       const stmt = database.prepare(sql);
-      const rows = stmt.all();
+      const rows = params.length > 0 ? stmt.all(...params) : stmt.all();
       
       return { ok: true, objects: rows };
     } catch (error) {
@@ -136,8 +138,16 @@ export const sqlite_table_info = {
   handler: async (input: { table: string }, _profileName?: string, _profile?: any, _client?: any) => {
     try {
       const database = connectRO();
-      const stmt = database.prepare(`PRAGMA table_info('${input.table}')`);
-      const columns = stmt.all();
+      // Validate table name to prevent injection
+      if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(input.table)) {
+        return createApiError(400, 'VALIDATION_ERROR', 'Invalid table name. Must contain only letters, numbers, and underscores.', {
+          suggestion: 'Use sqlite_list_objects to see available table names',
+          example: 'Valid names: silver_account_statements, gold_account_summary'
+        });
+      }
+      
+      const stmt = database.prepare(`PRAGMA table_info(?)`);
+      const columns = stmt.all(input.table);
       
       const formattedColumns = columns.map((col: any) => ({
         name: col.name,
@@ -174,12 +184,21 @@ export const sqlite_explain = {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       if (message.includes('database file not found')) {
-        return createApiError(500, 'CONNECTION_ERROR', 'SQLite connection failed. Check if database file exists at: ' + DB_PATH);
+        return createApiError(500, 'CONNECTION_ERROR', 'SQLite database not found', {
+          suggestion: 'Run the populate script to create the database',
+          example: 'npx tsx scripts/populate-sqlite.ts'
+        });
       }
       if (message.includes('forbidden') || message.includes('SELECT')) {
-        return createApiError(400, 'VALIDATION_ERROR', message);
+        return createApiError(400, 'VALIDATION_ERROR', message, {
+          suggestion: 'Only SELECT and WITH queries are allowed',
+          example: 'SELECT * FROM gold_account_summary LIMIT 10'
+        });
       }
-      return createApiError(500, 'QUERY_ERROR', message);
+      return createApiError(500, 'QUERY_ERROR', message, {
+        suggestion: 'Check SQL syntax and table names',
+        example: 'Use sqlite_list_objects to see available tables'
+      });
     }
   }
 };
@@ -229,12 +248,21 @@ export const sqlite_sql_select = {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       if (message.includes('database file not found')) {
-        return createApiError(500, 'CONNECTION_ERROR', 'SQLite connection failed. Check if database file exists at: ' + DB_PATH);
+        return createApiError(500, 'CONNECTION_ERROR', 'SQLite database not found', {
+          suggestion: 'Run the populate script to create the database',
+          example: 'npx tsx scripts/populate-sqlite.ts'
+        });
       }
       if (message.includes('forbidden') || message.includes('SELECT')) {
-        return createApiError(400, 'VALIDATION_ERROR', message);
+        return createApiError(400, 'VALIDATION_ERROR', message, {
+          suggestion: 'Only SELECT and WITH queries are allowed',
+          example: 'SELECT * FROM gold_account_summary LIMIT 10'
+        });
       }
-      return createApiError(500, 'QUERY_ERROR', message);
+      return createApiError(500, 'QUERY_ERROR', message, {
+        suggestion: 'Check SQL syntax and table names',
+        example: 'Use sqlite_list_objects to see available tables'
+      });
     }
   }
 };

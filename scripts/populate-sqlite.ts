@@ -222,6 +222,32 @@ async function loadStatements(statements: any[]) {
   }
 }
 
+async function createIndexes() {
+  console.log('Creating performance indexes...');
+  
+  try {
+    const indexes = [
+      // Critical indexes for query performance
+      'CREATE INDEX IF NOT EXISTS idx_statements_account_code ON silver_account_statements(account_code)',
+      'CREATE INDEX IF NOT EXISTS idx_statements_date ON silver_account_statements(transaction_date)',
+      'CREATE INDEX IF NOT EXISTS idx_statements_entry_id ON silver_account_statements(entry_id)',
+      'CREATE INDEX IF NOT EXISTS idx_statements_date_account ON silver_account_statements(transaction_date, account_code)',
+      'CREATE INDEX IF NOT EXISTS idx_accounts_number ON dim_accounts(account_number)',
+      'CREATE INDEX IF NOT EXISTS idx_accounts_type ON dim_accounts(account_type)'
+    ];
+    
+    indexes.forEach((sql, index) => {
+      db.exec(sql);
+      console.log(`Created index ${index + 1}/${indexes.length}`);
+    });
+    
+    return Promise.resolve();
+  } catch (error) {
+    console.error('Error creating indexes:', error);
+    throw error;
+  }
+}
+
 async function createGoldViews() {
   console.log('Creating gold layer views...');
   
@@ -293,6 +319,9 @@ async function main() {
     
     const statements = await fetchAllAccountStatements(startDate, endDate);
     await loadStatements(statements);
+    
+    // Create performance indexes
+    await createIndexes();
     
     // Create gold layer views
     await createGoldViews();

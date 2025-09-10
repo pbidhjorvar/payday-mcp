@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
+import pRetry from 'p-retry';
 import { Profile } from '../config/profiles.js';
 import { AuthClient } from '../auth/authClient.js';
 import { mapHttpError, ApiError } from './errors.js';
@@ -79,10 +80,9 @@ export class PaydayClient {
     path: string,
     params?: Record<string, any>
   ): Promise<T | ApiError> {
-    const startTime = Date.now();
-    let retryCount = 0;
-
-    const makeRequest = async (): Promise<T | ApiError> => {
+    return pRetry(async () => {
+      const startTime = Date.now();
+      
       try {
         // Process params - convert arrays to comma-separated strings
         const processedParams = params ? { ...params } : {};
@@ -104,41 +104,71 @@ export class PaydayClient {
 
         return response.data;
       } catch (error) {
+        const duration = Date.now() - startTime;
+        
         if (axios.isAxiosError(error) && error.response) {
           const { status, data } = error.response;
 
-          // Auto-refresh on 401 (once per call)
-          if (status === 401 && retryCount === 0) {
-            retryCount++;
-            logger.info('Token expired, refreshing...');
-            this.authClient.clearCache(this.profileName);
-            return makeRequest();
-          }
-
-          const duration = Date.now() - startTime;
           logger.error(`GET ${path} failed`, {
             duration_ms: duration,
             status,
             error: data?.message || error.message,
           });
 
-          return mapHttpError(status, data);
+          // Handle auth failures - clear cache and retry
+          if (status === 401) {
+            this.authClient.clearCache(this.profileName);
+            throw new Error(`Auth failed: ${data?.message || 'Unauthorized'}`);
+          }
+          
+          // Retry on rate limits and server errors
+          if (status === 429) {
+            const retryAfter = error.response.headers['retry-after'];
+            const delay = retryAfter ? parseInt(retryAfter) * 1000 : 2000;
+            throw new Error(`Rate limited: retry after ${delay}ms`);
+          }
+          
+          if (status >= 500 && status < 600) {
+            throw new Error(`Server error: ${status} - ${data?.message || error.message}`);
+          }
+
+          // Don't retry on client errors (4xx except 401, 429)
+          if (status >= 400 && status < 500) {
+            throw new pRetry.AbortError(mapHttpError(status, data));
+          }
         }
 
-        // Network or other errors
-        const duration = Date.now() - startTime;
+        // Network or other errors - retry these
         logger.error(`GET ${path} failed`, {
           duration_ms: duration,
           error: error instanceof Error ? error.message : 'Unknown error',
         });
-
-        return mapHttpError(0, {
-          message: error instanceof Error ? error.message : 'Network error',
+        
+        throw error;
+      }
+    }, {
+      retries: 3,
+      factor: 2,
+      minTimeout: 1000,
+      maxTimeout: 10000,
+      onFailedAttempt: (error) => {
+        logger.info('Retrying request', {
+          path,
+          attempt: error.attemptNumber,
+          retriesLeft: error.retriesLeft,
+          error: error.message
         });
       }
-    };
-
-    return makeRequest();
+    }).catch((error) => {
+      // If it's an AbortError, return the wrapped ApiError
+      if (error instanceof pRetry.AbortError) {
+        return error.originalError as ApiError;
+      }
+      // For other errors, map to ApiError
+      return mapHttpError(500, { 
+        message: error instanceof Error ? error.message : 'Network error' 
+      });
+    });
   }
 
   async put<T = any>(

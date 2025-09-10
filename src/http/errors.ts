@@ -4,6 +4,8 @@ export interface ApiError {
     status: number;
     label: string;
     detail: string;
+    suggestion?: string;
+    example?: string;
     fields?: Record<string, string[]>;
   };
 }
@@ -12,7 +14,11 @@ export function createApiError(
   status: number,
   label: string,
   detail: string,
-  fields?: Record<string, string[]>
+  options?: {
+    fields?: Record<string, string[]>;
+    suggestion?: string;
+    example?: string;
+  }
 ): ApiError {
   return {
     ok: false,
@@ -20,7 +26,9 @@ export function createApiError(
       status,
       label,
       detail,
-      fields,
+      suggestion: options?.suggestion,
+      example: options?.example,
+      fields: options?.fields,
     },
   };
 }
@@ -36,14 +44,22 @@ export function mapHttpError(status: number, data?: any): ApiError {
         status,
         'VALIDATION_ERROR',
         data?.message || data?.detail || 'Invalid request data',
-        fields
+        {
+          fields,
+          suggestion: 'Check the required parameters and data types',
+          example: 'Use valid date format: YYYY-MM-DD (e.g., "2025-01-15")'
+        }
       );
     
     case 401:
       return createApiError(
         status,
         'AUTH_FAILED',
-        data?.message || data?.detail || 'Token expired'
+        data?.message || data?.detail || 'Authentication failed',
+        {
+          suggestion: 'Check your CLIENT_ID and CLIENT_SECRET in .env file',
+          example: 'Ensure credentials are valid and not expired'
+        }
       );
     
     case 403:
@@ -57,14 +73,22 @@ export function mapHttpError(status: number, data?: any): ApiError {
       return createApiError(
         status,
         'NOT_FOUND',
-        data?.message || data?.detail || 'Resource not found'
+        data?.message || data?.detail || 'Resource not found',
+        {
+          suggestion: 'Verify the ID exists and you have access to it',
+          example: 'Use list endpoints to find valid IDs'
+        }
       );
     
     case 429:
       return createApiError(
         status,
         'RATE_LIMITED',
-        data?.message || data?.detail || 'Too many requests'
+        data?.message || data?.detail || 'Rate limit exceeded',
+        {
+          suggestion: 'Wait before making more requests or reduce request frequency',
+          example: 'Current rate limit will reset in a few minutes'
+        }
       );
     
     default:

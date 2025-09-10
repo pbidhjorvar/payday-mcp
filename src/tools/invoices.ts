@@ -43,9 +43,14 @@ export const getInvoicesTool = {
     const data = (result as any).data || result;
     const meta = buildPaginationMeta(result, page, perpage);
 
+    // Create user-friendly summary
+    const invoices = Array.isArray(data) ? data : [];
+    const summary = generateInvoiceSummary(invoices);
+
     return {
       ok: true,
       data,
+      summary,
       ...(meta && { page: meta }),
       source: {
         endpoint,
@@ -271,3 +276,64 @@ export const updateInvoiceTool = {
     };
   },
 };
+
+// Helper function to generate user-friendly invoice summary
+function generateInvoiceSummary(invoices: any[]) {
+  if (invoices.length === 0) {
+    return {
+      total_items: 0,
+      message: "No invoices found",
+      suggestion: "Try adjusting your filters or date range"
+    };
+  }
+
+  const statusCounts = invoices.reduce((acc, inv) => {
+    const status = inv.status || 'unknown';
+    acc[status] = (acc[status] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const totalValue = invoices.reduce((sum, inv) => {
+    return sum + (parseFloat(inv.total) || 0);
+  }, 0);
+
+  const avgValue = totalValue / invoices.length;
+  
+  const mostRecent = invoices.sort((a, b) => 
+    new Date(b.created || 0).getTime() - new Date(a.created || 0).getTime()
+  )[0];
+
+  const statusSummary = Object.entries(statusCounts)
+    .map(([status, count]) => `${count} ${status}`)
+    .join(', ');
+
+  const insights = [];
+  if (statusCounts.OVERDUE > 0) {
+    insights.push(`${statusCounts.OVERDUE} invoices are overdue and need attention`);
+  }
+  if (statusCounts.SENT > 0) {
+    insights.push(`${statusCounts.SENT} invoices are awaiting payment`);
+  }
+  if (avgValue > 1000) {
+    insights.push(`High average value: ${avgValue.toFixed(0)} ${invoices[0]?.currency || 'ISK'}`);
+  }
+
+  return {
+    total_items: invoices.length,
+    total_value: totalValue,
+    average_value: Math.round(avgValue),
+    currency: invoices[0]?.currency || 'ISK',
+    status_breakdown: statusSummary,
+    key_insights: insights,
+    most_recent: mostRecent ? {
+      number: mostRecent.number,
+      customer: mostRecent.customer?.name,
+      created: mostRecent.created
+    } : null,
+    quick_actions: [
+      "Add status='OVERDUE' to see only overdue invoices",
+      "Use include=['lines'] to see invoice line items",
+      "Add from='2025-01-01' to filter by date range"
+    ]
+  };
+}

@@ -27,6 +27,7 @@
     "axios": "^1.7.8",
     "better-sqlite3": "^11.6.0",
     "dotenv": "^16.4.7",
+    "p-retry": "^7.0.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
