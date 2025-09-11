@@ -18,10 +18,13 @@ duckdb/
 *.duckdb
 *.duckdb.*
 
-# Data pipeline files (bronze/silver/gold contain potentially sensitive data)
-data/bronze/
-data/silver/  
-data/gold/
+# Data directory (contains sensitive financial data)
+data/
+
+# Document files (potentially sensitive)
+*.pdf
+*.xlsx
+*.xls
 
 # Python cache and environments
 __pycache__/

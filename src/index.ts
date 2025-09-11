@@ -17,6 +17,7 @@ import { showProfileTool, healthcheckTool, rateLimitStatusTool } from './tools/m
 import { getCustomersTool, getCustomerTool } from './tools/customers.js';
 import { getInvoicesTool, getInvoiceTool, updateInvoiceTool } from './tools/invoices.js';
 import { getExpensesTool, getExpenseAccountsTool, getExpensePaymentTypesTool } from './tools/expenses.js';
+import { getPaymentTypesTool } from './tools/payment-types.js';
 import { getPaymentsTool } from './tools/payments.js';
 import { getCompanyTool } from './tools/company.js';
 import { getAccountsTool, getAccountStatementTool } from './tools/accounting.js';
@@ -51,6 +52,7 @@ const tools = [
   getExpensesTool,
   getExpenseAccountsTool,
   getExpensePaymentTypesTool,
+  getPaymentTypesTool,
   getSalesOrdersTool,
   getPaymentsTool,
   createJournalEntryTool,

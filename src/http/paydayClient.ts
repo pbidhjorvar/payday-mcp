@@ -257,6 +257,18 @@ export class PaydayClient {
       } as ApiError;
     }
 
+    // Debug logging for journal entries
+    if (path === '/accounting/journal') {
+      logger.info('[POST DEBUG] Journal entry request:', {
+        path,
+        dataType: typeof data,
+        dataIsArray: Array.isArray(data),
+        linesType: data?.lines ? typeof data.lines : 'undefined',
+        linesIsArray: data?.lines ? Array.isArray(data.lines) : false,
+        fullData: JSON.stringify(data, null, 2)
+      });
+    }
+
     const startTime = Date.now();
     let retryCount = 0;
 
@@ -307,5 +319,9 @@ export class PaydayClient {
     };
 
     return makeRequest();
+  }
+
+  async getPaymentTypes<T = any>(): Promise<T | ApiError> {
+    return this.get<T>('/expenses/paymenttypes');
   }
 }

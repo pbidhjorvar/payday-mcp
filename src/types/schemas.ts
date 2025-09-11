@@ -83,6 +83,8 @@ export const getExpenseAccountsSchema = z.object({});
 
 export const getExpensePaymentTypesSchema = z.object({});
 
+export const getPaymentTypesSchema = z.object({});
+
 export const getSalesOrdersSchema = z.object({
   page: z.number().int().min(1).optional(),
   perpage: z.number().int().min(1).max(500).optional(),

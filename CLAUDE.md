@@ -79,6 +79,50 @@ Use this reference when:
 - Debugging API responses and error codes
 - Implementing new features or fixing issues
 
+## SQLite Database Query Examples
+
+💎 **Gold database contains 4,029 transactions (2022-2023) ready for analysis!**
+
+### 🔥 Always Use Parameters (Never Direct String Concatenation!)
+
+**✅ CORRECT:**
+```json
+{
+  "sql": "SELECT account_name, SUM(debit) FROM silver_account_statements WHERE account_type = ? AND transaction_date >= ? GROUP BY account_name ORDER BY SUM(debit) DESC LIMIT ?",
+  "params": ["Gjöld", "2023-01-01", 10]
+}
+```
+
+**❌ WRONG:**
+```sql
+"SELECT * FROM silver_account_statements WHERE account_type = 'Gjöld'"
+```
+
+### 📊 Key Tables & Views
+- `silver_account_statements` - All transactions with proper typing
+- `gold_account_summary` - Account totals and activity 
+- `gold_monthly_pl` - Monthly P&L breakdown
+- `gold_balance_sheet` - Balance sheet positions
+- `dim_accounts` - Chart of accounts
+
+### ⚡ Quick Analysis Examples
+```json
+// Monthly revenue 2023
+{"sql": "SELECT strftime('%Y-%m', transaction_date) as month, SUM(credit-debit) as revenue FROM silver_account_statements WHERE transaction_date >= ? AND account_type = ? GROUP BY month ORDER BY month", "params": ["2023-01-01", "Tekjur"]}
+
+// Top 10 expenses 2023  
+{"sql": "SELECT account_name, SUM(debit) as expense FROM silver_account_statements WHERE account_type = ? AND transaction_date LIKE ? GROUP BY account_name ORDER BY expense DESC LIMIT ?", "params": ["Gjöld", "2023%", 10]}
+
+// Account balance over time
+{"sql": "SELECT transaction_date, balance FROM silver_account_statements WHERE account_code = ? AND transaction_date >= ? ORDER BY transaction_date", "params": ["3200", "2023-01-01"]}
+```
+
+### 🎯 Workflow for Claude Desktop
+1. **List tables**: `sqlite_list_objects` with `{"prefix": "gold_"}`
+2. **Examine structure**: `sqlite_table_info` with `{"table": "gold_account_summary"}`  
+3. **Query with parameters**: `sqlite_sql_select` with proper `params` array
+4. **Use markdown format**: `{"format": "markdown"}` for readable results
+
 ## Common Issues
 
 1. **Auth failures**: Check CLIENT_ID/SECRET in .env, verify OAuth2 endpoint
