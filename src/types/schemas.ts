@@ -107,11 +107,11 @@ export const getInvoiceSchema = z.object({
 });
 
 export const updateInvoiceSchema = z.object({
-  invoice_id: z.string().describe('Invoice number (e.g., "1165") or UUID to update'),
-  status: z.enum(['PAID', 'CANCELLED', 'SENT']).optional().describe('Invoice status'),
-  paidDate: z.string().optional().describe('Payment date in ISO format. Accepts YYYY-MM-DD (will be converted to ISO) or full ISO timestamp (2019-10-18T17:01:00Z)'),
-  paymentType: z.string().optional().describe('Payment type UUID'),
-  mode: z.enum(['mark_as_paid', 'resend_email', 'cancel_claim', 'payment_extension', 'cancel_invoice', 'update_draft']).describe('Update mode'),
+  invoice_id: z.string().describe('Invoice number (e.g., "1165") or UUID to update. EXACT NAME: "invoice_id" (NOT "invoiceId")'),
+  status: z.enum(['PAID', 'CANCELLED', 'SENT']).optional().describe('Invoice status override'),
+  paidDate: z.string().optional().describe('Payment date. EXACT NAME: "paidDate" (NOT "paid_date" or "payment_date"). Accepts YYYY-MM-DD format (e.g., "2024-12-18") or ISO timestamp'),
+  paymentType: z.string().optional().describe('Payment type UUID. REQUIRED when mode="mark_as_paid". Get from payment-types-list tool'),
+  mode: z.enum(['mark_as_paid', 'resend_email', 'cancel_claim', 'payment_extension', 'cancel_invoice', 'update_draft']).describe('Update mode. EXACT NAME: "mode" (NOT "action")'),
   // Additional fields for update_draft mode
   draftData: z.record(z.any()).optional().describe('Draft invoice data for update_draft mode'),
 });

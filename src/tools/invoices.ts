@@ -166,6 +166,39 @@ export const updateInvoiceTool = {
 
     const startTime = Date.now();
     
+    // Helpful error messages for common parameter name mistakes
+    const inputKeys = Object.keys(input);
+    if (inputKeys.includes('invoiceId')) {
+      return {
+        ok: false,
+        error: {
+          status: 400,
+          label: 'PARAMETER_ERROR',
+          detail: 'Use "invoice_id" not "invoiceId". Check the documentation for correct parameter names.',
+        },
+      };
+    }
+    if (inputKeys.includes('action')) {
+      return {
+        ok: false,
+        error: {
+          status: 400,
+          label: 'PARAMETER_ERROR',
+          detail: 'Use "mode" not "action". Available modes: mark_as_paid, cancel_invoice, resend_email.',
+        },
+      };
+    }
+    if (inputKeys.includes('paid_date') || inputKeys.includes('payment_date')) {
+      return {
+        ok: false,
+        error: {
+          status: 400,
+          label: 'PARAMETER_ERROR',
+          detail: 'Use "paidDate" not "paid_date" or "payment_date". Format: YYYY-MM-DD (e.g., "2024-12-18").',
+        },
+      };
+    }
+    
     // Convert invoice number to UUID if needed
     let invoiceUuid = input.invoice_id;
     
@@ -202,6 +235,18 @@ export const updateInvoiceTool = {
     
     switch (input.mode) {
       case 'mark_as_paid':
+        // Validate required paymentType
+        if (!input.paymentType) {
+          return {
+            ok: false,
+            error: {
+              status: 400,
+              label: 'VALIDATION_ERROR',
+              detail: 'paymentType is required when mode="mark_as_paid". Use payment-types-list tool to get available payment types.',
+            },
+          };
+        }
+        
         // Convert YYYY-MM-DD format to ISO timestamp if needed
         let paidDate = input.paidDate || new Date().toISOString();
         if (input.paidDate && /^\d{4}-\d{2}-\d{2}$/.test(input.paidDate)) {

@@ -169,21 +169,46 @@ When working with invoices, you can use either:
 - Resend email: `mode="resend_email"`
 
 **Invoice update examples:**
+
+⚠️ **CRITICAL: Use these EXACT parameter names - common mistakes below!**
+
 ```json
-// Mark invoice as paid
+// ✅ CORRECT: Mark invoice as paid
 {
-  "invoice_id": "1165",
-  "mode": "mark_as_paid",
-  "paidDate": "2024-12-18",
-  "paymentType": "payment-type-uuid"
+  "invoice_id": "1165",                    // ✅ NOT "invoiceId"
+  "mode": "mark_as_paid",                  // ✅ NOT "action" 
+  "paidDate": "2024-12-18",               // ✅ NOT "paid_date" or "payment_date"
+  "paymentType": "payment-type-uuid"       // ✅ Required for mark_as_paid
 }
 
-// Cancel invoice  
+// ✅ CORRECT: Cancel invoice  
 {
   "invoice_id": "1165",
   "mode": "cancel_invoice"
 }
+
+// ✅ CORRECT: Resend invoice email
+{
+  "invoice_id": "1165", 
+  "mode": "resend_email"
+}
 ```
+
+**❌ COMMON MISTAKES TO AVOID:**
+- ❌ `"invoiceId"` → Use `"invoice_id"` 
+- ❌ `"action"` → Use `"mode"`
+- ❌ `"paid_date"` → Use `"paidDate"`
+- ❌ `"payment_date"` → Use `"paidDate"`
+- ❌ Missing `paymentType` when using `mark_as_paid`
+
+**📋 STEP-BY-STEP for marking invoice as paid:**
+1. Get payment types: `payment-types-list` tool
+2. Find the payment type UUID you want to use
+3. Call `payday_update_invoice` with ALL required parameters:
+   - `invoice_id` (number or UUID)
+   - `mode: "mark_as_paid"` 
+   - `paidDate` (YYYY-MM-DD format)
+   - `paymentType` (UUID from step 1)
 
 ### Journal Entry Requirements
 Each journal line must have **exactly one** of:
