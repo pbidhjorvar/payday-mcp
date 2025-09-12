@@ -164,9 +164,26 @@ When working with invoices, you can use either:
 - `orderBy` - Field to sort by
 
 **Common invoice operations:**
-- Mark as paid: `mode="mark_as_paid"`, include `paidDate` and `paymentType`
+- Mark as paid: `mode="mark_as_paid"`, include `paidDate` (YYYY-MM-DD or ISO format) and `paymentType` (UUID)
 - Cancel invoice: `mode="cancel_invoice"`
 - Resend email: `mode="resend_email"`
+
+**Invoice update examples:**
+```json
+// Mark invoice as paid
+{
+  "invoice_id": "1165",
+  "mode": "mark_as_paid",
+  "paidDate": "2024-12-18",
+  "paymentType": "payment-type-uuid"
+}
+
+// Cancel invoice  
+{
+  "invoice_id": "1165",
+  "mode": "cancel_invoice"
+}
+```
 
 ### Journal Entry Requirements
 Each journal line must have **exactly one** of:

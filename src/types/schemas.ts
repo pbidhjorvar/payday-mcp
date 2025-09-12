@@ -109,7 +109,7 @@ export const getInvoiceSchema = z.object({
 export const updateInvoiceSchema = z.object({
   invoice_id: z.string().describe('Invoice number (e.g., "1165") or UUID to update'),
   status: z.enum(['PAID', 'CANCELLED', 'SENT']).optional().describe('Invoice status'),
-  paidDate: z.string().optional().describe('Payment date in ISO format (2019-10-18T17:01:00Z)'),
+  paidDate: z.string().optional().describe('Payment date in ISO format. Accepts YYYY-MM-DD (will be converted to ISO) or full ISO timestamp (2019-10-18T17:01:00Z)'),
   paymentType: z.string().optional().describe('Payment type UUID'),
   mode: z.enum(['mark_as_paid', 'resend_email', 'cancel_claim', 'payment_extension', 'cancel_invoice', 'update_draft']).describe('Update mode'),
   // Additional fields for update_draft mode

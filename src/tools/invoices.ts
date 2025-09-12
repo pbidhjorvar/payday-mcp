@@ -202,9 +202,16 @@ export const updateInvoiceTool = {
     
     switch (input.mode) {
       case 'mark_as_paid':
+        // Convert YYYY-MM-DD format to ISO timestamp if needed
+        let paidDate = input.paidDate || new Date().toISOString();
+        if (input.paidDate && /^\d{4}-\d{2}-\d{2}$/.test(input.paidDate)) {
+          // Convert YYYY-MM-DD to ISO timestamp (noon UTC)
+          paidDate = `${input.paidDate}T12:00:00Z`;
+        }
+        
         requestBody = {
           status: 'PAID',
-          paidDate: input.paidDate || new Date().toISOString(),
+          paidDate: paidDate,
           paymentType: input.paymentType,
         };
         break;
