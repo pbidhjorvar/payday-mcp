@@ -266,7 +266,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 error: {
                   status: 400,
                   label: 'PARAMETER_ERROR',
-                  detail: 'Use "paidDate" not "paid_date" or "payment_date". Format: YYYY-MM-DD (e.g., "2024-12-18").',
+                  detail: 'Use "paidDate" not "paid_date" or "payment_date". Format: YYYY-MM-DD (e.g., "2024-12-18"). Also required: "paymentType" (get UUID from payment-types-list tool).',
                 },
               }, null, 2),
             },

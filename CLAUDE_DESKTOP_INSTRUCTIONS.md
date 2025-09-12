@@ -210,17 +210,32 @@ When working with invoices, you can use either:
    - `paidDate` (YYYY-MM-DD format)
    - `paymentType` (UUID from step 1)
 
-**⚠️ IMPORTANT: The MCP server will now catch parameter name mistakes and show helpful error messages. If you get a PARAMETER_ERROR, check the error message for the correct parameter name to use.**
+**⚠️ CRITICAL: ALL 4 parameters required for mark_as_paid:**
+1. `invoice_id` - Invoice number or UUID
+2. `mode` - Must be "mark_as_paid" 
+3. `paidDate` - Date in YYYY-MM-DD format
+4. `paymentType` - Payment type UUID (REQUIRED!)
 
-**✅ WORKING EXAMPLE:**
+**⚠️ IMPORTANT: The MCP server will catch parameter mistakes and show helpful error messages. Missing paymentType will cause API validation errors.**
+
+**✅ COMPLETE WORKING EXAMPLE:**
 ```json
 {
   "invoice_id": "c07fc3f7-1bc0-4e2b-a2cb-e701769fc154",
   "mode": "mark_as_paid",
   "paidDate": "2024-12-18", 
-  "paymentType": "uuid-from-payment-types-list"
+  "paymentType": "c103740e-8289-4d8b-aa93-3aa8742ef209"
 }
 ```
+
+**Available paymentType UUIDs:**
+- `c103740e-8289-4d8b-aa93-3aa8742ef209` - Landsbankinn (Debet) 
+- `661af492-9b12-4f11-a32c-544a844438b4` - Sparnaðarreikningur
+- `3d33b017-3249-43ee-92dd-63a3db8da443` - GBP Reikningur
+- `bae09c55-114e-41fc-8628-f96540a0c1f7` - EUR Reikningur
+- `6ac48f07-26e6-4819-b798-e94e85f20b69` - Kreditkort
+
+Use `payment-types-list` tool to get the complete current list.
 
 ### Journal Entry Requirements
 Each journal line must have **exactly one** of:
