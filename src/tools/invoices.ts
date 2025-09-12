@@ -31,6 +31,7 @@ export const getInvoicesTool = {
     if (input.query) params.query = input.query;
     if (input.order) params.order = input.order;
     if (input.orderBy) params.orderBy = input.orderBy;
+    if (input.customerId) params.customerId = input.customerId;
     if (input.include && input.include.length > 0) {
       params.include = input.include;
     }
@@ -39,10 +40,8 @@ export const getInvoicesTool = {
     if (input.from && !input.dateFrom) params.dateFrom = input.from;
     if (input.to && !input.dateTo) params.dateTo = input.to;
 
-    // Determine endpoint based on customerId
-    const endpoint = input.customerId
-      ? `/customers/${input.customerId}/invoices`
-      : '/invoices';
+    // Always use /invoices endpoint with query parameters
+    const endpoint = '/invoices';
 
     const startTime = Date.now();
     const result = await client.get(endpoint, params);
