@@ -56,7 +56,7 @@ export const getCustomerTool = {
     client: PaydayClient
   ) => {
     const startTime = Date.now();
-    const result = await client.get(`/customers/${input.customer_id}`);
+    const result = await client.get(`/customers/${input.customerId}`);
     
     if ('error' in result) {
       return result;
@@ -68,7 +68,7 @@ export const getCustomerTool = {
       ok: true,
       data,
       source: {
-        endpoint: `/customers/${input.customer_id}`,
+        endpoint: `/customers/${input.customerId}`,
         duration_ms: Date.now() - startTime,
       },
     };

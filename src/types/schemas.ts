@@ -24,11 +24,11 @@ export const getCustomersSchema = z.object({
 });
 
 export const getCustomerSchema = z.object({
-  customer_id: z.string(),
+  customerId: z.string(),
 });
 
 export const getInvoicesSchema = z.object({
-  customer_id: z.string().optional(),
+  customerId: z.string().optional(),
   excludeStatus: z.string().optional().describe('Exclude invoices with these statuses. Available values: DRAFT, SENT, PAID, CREDIT, CANCELLED. Use comma "," to separate multiple values. E.g., excludeStatus="DRAFT,PAID,CREDIT,CANCELLED" shows only unpaid invoices (status SENT)'),
   dateFrom: dateSchema.optional().describe('Invoice date from (YYYY-MM-DD)'),
   dateTo: dateSchema.optional().describe('Invoice date to (YYYY-MM-DD)'),
@@ -102,12 +102,12 @@ export const getSalesOrdersSchema = z.object({
 });
 
 export const getInvoiceSchema = z.object({
-  invoice_id: z.string().describe('Invoice number (e.g., "1165") or UUID to get'),
+  invoiceId: z.string().describe('Invoice number (e.g., "1165") or UUID to get'),
   include: z.array(z.string()).optional().describe('Additional data to include (e.g., ["lines"])'),
 });
 
 export const updateInvoiceSchema = z.object({
-  invoice_id: z.string().describe('Invoice number (e.g., "1165") or UUID to update. EXACT NAME: "invoice_id" (NOT "invoiceId")'),
+  invoiceId: z.string().describe('Invoice number (e.g., "1165") or UUID to update'),
   status: z.enum(['PAID', 'CANCELLED', 'SENT']).optional().describe('Invoice status override'),
   paidDate: z.string().optional().describe('Payment date. EXACT NAME: "paidDate" (NOT "paid_date" or "payment_date"). Accepts YYYY-MM-DD format (e.g., "2024-12-18") or ISO timestamp'),
   paymentType: z.string().optional().describe('Payment type UUID. REQUIRED when mode="mark_as_paid". Get from payment-types-list tool'),

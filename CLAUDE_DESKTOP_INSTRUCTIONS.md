@@ -155,6 +155,7 @@ When working with invoices, you can use either:
 - Invoice UUIDs directly
 
 **Invoice filtering parameters:**
+- `customerId` - Filter invoices for specific customer (NO UNDERSCORES!)
 - `excludeStatus` - Exclude invoices with specific statuses. Available values: DRAFT, SENT, PAID, CREDIT, CANCELLED. Use comma to separate multiple values. E.g., `excludeStatus="DRAFT,PAID,CREDIT,CANCELLED"` shows only unpaid invoices (status SENT)
 - `dateFrom`/`dateTo` - Filter by invoice date range (YYYY-MM-DD)
 - `dueDateFrom`/`dueDateTo` - Filter by due date range
@@ -195,23 +196,26 @@ When working with invoices, you can use either:
 ```
 
 **❌ COMMON MISTAKES TO AVOID:**
-- ❌ `"invoiceId"` → Use `"invoice_id"` 
+- ❌ `"invoice_id"` → Use `"invoiceId"` (no underscores!)
+- ❌ `"customer_id"` → Use `"customerId"` (no underscores!)
 - ❌ `"action"` → Use `"mode"`
 - ❌ `"paid_date"` → Use `"paidDate"`
 - ❌ `"payment_date"` → Use `"paidDate"`
 - ❌ Missing `paymentType` when using `mark_as_paid`
 
+**⚠️ PAYDAY RULE: NO UNDERSCORES in parameter names! Always use camelCase (e.g., `customerId`, `invoiceId`, `paymentType`)**
+
 **📋 STEP-BY-STEP for marking invoice as paid:**
 1. Get payment types: `payment-types-list` tool
 2. Find the payment type UUID you want to use
 3. Call `payday_update_invoice` with ALL required parameters:
-   - `invoice_id` (number or UUID)
+   - `invoiceId` (number or UUID - NO UNDERSCORES!)
    - `mode: "mark_as_paid"` 
    - `paidDate` (YYYY-MM-DD format)
    - `paymentType` (UUID from step 1)
 
 **⚠️ CRITICAL: ALL 4 parameters required for mark_as_paid:**
-1. `invoice_id` - Invoice number or UUID
+1. `invoiceId` - Invoice number or UUID (NO UNDERSCORES!)
 2. `mode` - Must be "mark_as_paid" 
 3. `paidDate` - Date in YYYY-MM-DD format
 4. `paymentType` - Payment type UUID (REQUIRED!)
@@ -221,7 +225,7 @@ When working with invoices, you can use either:
 **✅ COMPLETE WORKING EXAMPLE:**
 ```json
 {
-  "invoice_id": "c07fc3f7-1bc0-4e2b-a2cb-e701769fc154",
+  "invoiceId": "c07fc3f7-1bc0-4e2b-a2cb-e701769fc154",
   "mode": "mark_as_paid",
   "paidDate": "2024-12-18", 
   "paymentType": "c103740e-8289-4d8b-aa93-3aa8742ef209"

@@ -39,9 +39,9 @@ export const getInvoicesTool = {
     if (input.from && !input.dateFrom) params.dateFrom = input.from;
     if (input.to && !input.dateTo) params.dateTo = input.to;
 
-    // Determine endpoint based on customer_id
-    const endpoint = input.customer_id
-      ? `/customers/${input.customer_id}/invoices`
+    // Determine endpoint based on customerId
+    const endpoint = input.customerId
+      ? `/customers/${input.customerId}/invoices`
       : '/invoices';
 
     const startTime = Date.now();
@@ -84,10 +84,10 @@ export const getInvoiceTool = {
     const startTime = Date.now();
     
     // Convert invoice number to UUID if needed
-    let invoiceUuid = input.invoice_id;
+    let invoiceUuid = input.invoiceId;
     
     // Check if input looks like a UUID (contains dashes) or a number
-    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(input.invoice_id)) {
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(input.invoiceId)) {
       // Not a UUID, assume it's an invoice number - need to look it up
       const invoiceListResult = await client.get('/invoices', { perpage: 500 });
       
@@ -97,7 +97,7 @@ export const getInvoiceTool = {
       
       const invoiceData = (invoiceListResult as any).invoices || (invoiceListResult as any).data || invoiceListResult;
       const invoice = invoiceData.find((inv: any) => 
-        inv.number?.toString() === input.invoice_id.toString()
+        inv.number?.toString() === input.invoiceId.toString()
       );
       
       if (!invoice) {
@@ -106,7 +106,7 @@ export const getInvoiceTool = {
           error: {
             status: 404,
             label: 'INVOICE_NOT_FOUND',
-            detail: `Invoice with number ${input.invoice_id} not found`,
+            detail: `Invoice with number ${input.invoiceId} not found`,
           },
         };
       }
@@ -134,7 +134,7 @@ export const getInvoiceTool = {
       source: {
         endpoint: `/invoices/${invoiceUuid}`,
         method: 'GET',
-        invoice_number: input.invoice_id,
+        invoice_number: input.invoiceId,
         invoice_uuid: invoiceUuid,
         duration_ms: Date.now() - startTime,
       },
@@ -200,10 +200,10 @@ export const updateInvoiceTool = {
     }
     
     // Convert invoice number to UUID if needed
-    let invoiceUuid = input.invoice_id;
+    let invoiceUuid = input.invoiceId;
     
     // Check if input looks like a UUID (contains dashes) or a number
-    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(input.invoice_id)) {
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(input.invoiceId)) {
       // Not a UUID, assume it's an invoice number - need to look it up
       const invoiceListResult = await client.get('/invoices', { perpage: 500 });
       
@@ -213,7 +213,7 @@ export const updateInvoiceTool = {
       
       const invoiceData = (invoiceListResult as any).invoices || (invoiceListResult as any).data || invoiceListResult;
       const invoice = invoiceData.find((inv: any) => 
-        inv.number?.toString() === input.invoice_id.toString()
+        inv.number?.toString() === input.invoiceId.toString()
       );
       
       if (!invoice) {
@@ -222,7 +222,7 @@ export const updateInvoiceTool = {
           error: {
             status: 404,
             label: 'INVOICE_NOT_FOUND',
-            detail: `Invoice with number ${input.invoice_id} not found`,
+            detail: `Invoice with number ${input.invoiceId} not found`,
           },
         };
       }
@@ -332,7 +332,7 @@ export const updateInvoiceTool = {
         endpoint: `/invoices/${invoiceUuid}`,
         method: 'PUT',
         mode: input.mode,
-        invoice_number: input.invoice_id,
+        invoice_number: input.invoiceId,
         invoice_uuid: invoiceUuid,
         duration_ms: Date.now() - startTime,
       },
