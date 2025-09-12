@@ -19,7 +19,7 @@ The server automatically handles OAuth2 authentication and supports multiple pro
 - `payday_update_journal_entry` - Update journal entries (post drafts)
 
 ### 🧾 **Invoices**
-- `payday_get_invoices` - List invoices with filtering options
+- `payday_get_invoices` - List invoices with filtering by excludeStatus, date ranges, query search, and sorting
 - `payday_get_invoice` - Get single invoice with details (accepts invoice number or UUID)
 - `payday_update_invoice` - Update invoices (mark as paid, cancel, resend, etc.)
 
@@ -153,6 +153,15 @@ Always use **YYYY-MM-DD** format for dates:
 When working with invoices, you can use either:
 - Invoice numbers (e.g., `"1165"`) - automatically converted to UUIDs
 - Invoice UUIDs directly
+
+**Invoice filtering parameters:**
+- `excludeStatus` - Exclude invoices with specific statuses. Available values: DRAFT, SENT, PAID, CREDIT, CANCELLED. Use comma to separate multiple values. E.g., `excludeStatus="DRAFT,PAID,CREDIT,CANCELLED"` shows only unpaid invoices (status SENT)
+- `dateFrom`/`dateTo` - Filter by invoice date range (YYYY-MM-DD)
+- `dueDateFrom`/`dueDateTo` - Filter by due date range
+- `finalDueDateFrom`/`finalDueDateTo` - Filter by final due date range
+- `query` - Search by invoice number, customer name, etc.
+- `order` - Sort order: "asc" or "desc"
+- `orderBy` - Field to sort by
 
 **Common invoice operations:**
 - Mark as paid: `mode="mark_as_paid"`, include `paidDate` and `paymentType`

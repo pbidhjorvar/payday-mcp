@@ -29,12 +29,22 @@ export const getCustomerSchema = z.object({
 
 export const getInvoicesSchema = z.object({
   customer_id: z.string().optional(),
-  status: z.string().optional(),
-  from: dateSchema.optional(),
-  to: dateSchema.optional(),
+  excludeStatus: z.string().optional().describe('Exclude invoices with these statuses. Available values: DRAFT, SENT, PAID, CREDIT, CANCELLED. Use comma "," to separate multiple values. E.g., excludeStatus="DRAFT,PAID,CREDIT,CANCELLED" shows only unpaid invoices (status SENT)'),
+  dateFrom: dateSchema.optional().describe('Invoice date from (YYYY-MM-DD)'),
+  dateTo: dateSchema.optional().describe('Invoice date to (YYYY-MM-DD)'),
+  dueDateFrom: dateSchema.optional().describe('Due date from (YYYY-MM-DD)'),
+  dueDateTo: dateSchema.optional().describe('Due date to (YYYY-MM-DD)'),
+  finalDueDateFrom: dateSchema.optional().describe('Final due date from (YYYY-MM-DD)'),
+  finalDueDateTo: dateSchema.optional().describe('Final due date to (YYYY-MM-DD)'),
+  query: z.string().optional().describe('Search query for invoice number, customer name, etc.'),
+  order: z.enum(['asc', 'desc']).optional().describe('Sort order'),
+  orderBy: z.string().optional().describe('Field to sort by'),
   page: z.number().int().min(1).optional(),
   perpage: z.number().int().min(1).max(500).optional(),
   include: includeSchema,
+  // Legacy parameters for backward compatibility
+  from: dateSchema.optional().describe('Legacy: use dateFrom instead'),
+  to: dateSchema.optional().describe('Legacy: use dateTo instead'),
 });
 
 export const getExpensesSchema = z.object({

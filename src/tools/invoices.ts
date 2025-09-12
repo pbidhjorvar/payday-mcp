@@ -5,7 +5,7 @@ import { validatePagination, buildPaginationMeta } from '../util/pagination.js';
 
 export const getInvoicesTool = {
   name: 'payday_get_invoices',
-  description: 'Get invoices with optional filtering',
+  description: 'Get invoices with optional filtering by excludeStatus, date ranges (invoice, due, final due), query search, and sorting',
   inputSchema: getInvoicesSchema,
   handler: async (
     input: any,
@@ -21,12 +21,23 @@ export const getInvoicesTool = {
     const params: Record<string, any> = { page, perpage };
     
     // Add optional filters
-    if (input.status) params.status = input.status;
-    if (input.from) params.from = input.from;
-    if (input.to) params.to = input.to;
+    if (input.excludeStatus) params.excludeStatus = input.excludeStatus;
+    if (input.dateFrom) params.dateFrom = input.dateFrom;
+    if (input.dateTo) params.dateTo = input.dateTo;
+    if (input.dueDateFrom) params.dueDateFrom = input.dueDateFrom;
+    if (input.dueDateTo) params.dueDateTo = input.dueDateTo;
+    if (input.finalDueDateFrom) params.finalDueDateFrom = input.finalDueDateFrom;
+    if (input.finalDueDateTo) params.finalDueDateTo = input.finalDueDateTo;
+    if (input.query) params.query = input.query;
+    if (input.order) params.order = input.order;
+    if (input.orderBy) params.orderBy = input.orderBy;
     if (input.include && input.include.length > 0) {
       params.include = input.include;
     }
+    
+    // Legacy parameter support
+    if (input.from && !input.dateFrom) params.dateFrom = input.from;
+    if (input.to && !input.dateTo) params.dateTo = input.to;
 
     // Determine endpoint based on customer_id
     const endpoint = input.customer_id
