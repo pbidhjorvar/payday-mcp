@@ -164,6 +164,15 @@ When working with invoices, you can use either:
 - `order` - Sort order: "asc" or "desc"
 - `orderBy` - Field to sort by
 
+**Example: Get all invoices for a specific customer:**
+```json
+{
+  "customerId": "1debaf72-f506-4367-8092-60adfd7820ac",
+  "perpage": 100,
+  "page": 1
+}
+```
+
 **Common invoice operations:**
 - Mark as paid: `mode="mark_as_paid"`, include `paidDate` (YYYY-MM-DD or ISO format) and `paymentType` (UUID)
 - Cancel invoice: `mode="cancel_invoice"`
