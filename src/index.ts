@@ -214,6 +214,67 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
     }
     
+    // Special validation for invoice update tool to catch common parameter mistakes
+    if (name === 'payday_update_invoice') {
+      console.error('[DEBUG] Invoice update args received:', JSON.stringify(processedArgs, null, 2));
+      const argKeys = Object.keys(processedArgs);
+      console.error('[DEBUG] Parameter keys:', argKeys);
+      
+      if (argKeys.includes('invoiceId')) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                ok: false,
+                error: {
+                  status: 400,
+                  label: 'PARAMETER_ERROR',
+                  detail: 'Use "invoice_id" not "invoiceId". Check the documentation for correct parameter names.',
+                },
+              }, null, 2),
+            },
+          ],
+        };
+      }
+      
+      if (argKeys.includes('action')) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                ok: false,
+                error: {
+                  status: 400,
+                  label: 'PARAMETER_ERROR',
+                  detail: 'Use "mode" not "action". Available modes: mark_as_paid, cancel_invoice, resend_email.',
+                },
+              }, null, 2),
+            },
+          ],
+        };
+      }
+      
+      if (argKeys.includes('paid_date') || argKeys.includes('payment_date')) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                ok: false,
+                error: {
+                  status: 400,
+                  label: 'PARAMETER_ERROR',
+                  detail: 'Use "paidDate" not "paid_date" or "payment_date". Format: YYYY-MM-DD (e.g., "2024-12-18").',
+                },
+              }, null, 2),
+            },
+          ],
+        };
+      }
+    }
+    
     // Validate input
     const validatedInput = tool.inputSchema.parse(processedArgs);
     

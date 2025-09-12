@@ -210,6 +210,18 @@ When working with invoices, you can use either:
    - `paidDate` (YYYY-MM-DD format)
    - `paymentType` (UUID from step 1)
 
+**⚠️ IMPORTANT: The MCP server will now catch parameter name mistakes and show helpful error messages. If you get a PARAMETER_ERROR, check the error message for the correct parameter name to use.**
+
+**✅ WORKING EXAMPLE:**
+```json
+{
+  "invoice_id": "c07fc3f7-1bc0-4e2b-a2cb-e701769fc154",
+  "mode": "mark_as_paid",
+  "paidDate": "2024-12-18", 
+  "paymentType": "uuid-from-payment-types-list"
+}
+```
+
 ### Journal Entry Requirements
 Each journal line must have **exactly one** of:
 - `ledgerAccountId` (ledger account entry)
