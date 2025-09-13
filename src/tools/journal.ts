@@ -13,10 +13,12 @@ export const createJournalEntryTool = {
     profile: Profile,
     client: PaydayClient
   ) => {
-    // Debug logging for journal entry creation
-    console.error('[JOURNAL] Input received:', JSON.stringify(input, null, 2));
-    console.error('[JOURNAL] Type of input.lines:', typeof input.lines);
-    console.error('[JOURNAL] Is input.lines an array?:', Array.isArray(input.lines));
+    // Debug logging for journal entry creation (only when DEBUG=1)
+    if (process.env.DEBUG === '1') {
+      console.error('[JOURNAL] Input lines type:', typeof input.lines);
+      console.error('[JOURNAL] Is input.lines array?:', Array.isArray(input.lines));
+      console.error('[JOURNAL] Lines count:', Array.isArray(input.lines) ? input.lines.length : 'N/A');
+    }
     
     // Check read-only mode
     if (profile.read_only) {
@@ -40,7 +42,9 @@ export const createJournalEntryTool = {
       status: input.status || 'DRAFT', // Default to DRAFT if not specified
     };
     
-    console.error('[JOURNAL] Request body to send:', JSON.stringify(requestBody, null, 2));
+    if (process.env.DEBUG === '1') {
+      console.error('[JOURNAL] Request body to send:', JSON.stringify(requestBody, null, 2));
+    }
 
     const result = await client.post('/accounting/journal', requestBody);
     
@@ -91,7 +95,7 @@ export const updateJournalEntryTool = {
       status: input.status,
     };
 
-    const result = await client.put(`/accounting/journal/${input.journal_id}`, requestBody);
+    const result = await client.put(`/accounting/journal/${input.journalId}`, requestBody);
     
     if ('error' in result) {
       return result;
@@ -103,7 +107,7 @@ export const updateJournalEntryTool = {
       ok: true,
       data,
       source: {
-        endpoint: `/accounting/journal/${input.journal_id}`,
+        endpoint: `/accounting/journal/${input.journalId}`,
         method: 'PUT',
         duration_ms: Date.now() - startTime,
       },

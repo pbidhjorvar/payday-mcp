@@ -1,0 +1,8 @@
+[
+  { "name": "Veltureikningur", "number": "0133-26-007035", "category": "Debet" },
+  { "name": "Vaxtareikningur", "number": "0133-15-004882", "category": "Debet" },
+  { "name": "GBP Sparireikningur", "number": "0133-38-001354", "category": "Foreign Currency" },
+  { "name": "EUR Sparireikningur", "number": "0133-38-001239", "category": "Foreign Currency" },
+  { "name": "USD Sparireikningur", "number": "0133-38-001240", "category": "Foreign Currency" }
+]
+

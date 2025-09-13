@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Example login XML for Landsbankinn B2B. Adjust element names to match LI_Innskra.xsd -->
+<LI_Innskra xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <CompanyId>600722-1070</CompanyId>
+  <Username>your-username</Username>
+  <Password>your-password</Password>
+</LI_Innskra>
+

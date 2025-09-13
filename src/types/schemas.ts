@@ -141,7 +141,7 @@ export const createJournalEntrySchema = z.object({
 });
 
 export const updateJournalEntrySchema = z.object({
-  journal_id: z.string().describe('Journal entry ID to update'),
+  journalId: z.string().describe('Journal entry ID to update'),
   status: z.enum(['POST']).describe('Status to update to (currently only supports POST)'),
 });
 

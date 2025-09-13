@@ -23,6 +23,7 @@ import { getCompanyTool } from './tools/company.js';
 import { getAccountsTool, getAccountStatementTool } from './tools/accounting.js';
 import { getSalesOrdersTool } from './tools/salesorders.js';
 import { createJournalEntryTool, updateJournalEntryTool, getJournalEntriesTool } from './tools/journal.js';
+import { getBankTransactionsTool } from './tools/bank-transactions.js';
 import { sqlite_list_objects, sqlite_table_info, sqlite_explain, sqlite_sql_select } from './tools/sqlite_sql.js';
 
 // Initialize configuration
@@ -58,6 +59,8 @@ const tools = [
   createJournalEntryTool,
   updateJournalEntryTool,
   getJournalEntriesTool,
+  // Bank transaction tools
+  getBankTransactionsTool,
   // SQLite SQL tools (no Payday client needed)
   sqlite_list_objects,
   sqlite_table_info,
@@ -81,80 +84,118 @@ const server = new Server(
 // Handle list tools request
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
-    tools: tools.map((tool) => ({
-      name: tool.name,
-      description: tool.description,
-      inputSchema: {
-        type: 'object',
-        properties: getSchemaProperties(tool.inputSchema),
-        additionalProperties: false,
-      },
-    })),
+    tools: tools.map((tool) => {
+      const schemaResult = getSchemaProperties(tool.inputSchema);
+      return {
+        name: tool.name,
+        description: tool.description,
+        inputSchema: {
+          type: 'object',
+          properties: schemaResult.properties,
+          required: schemaResult.required,
+          additionalProperties: false,
+        },
+      };
+    }),
   };
 });
 
 // Helper function to convert Zod schema to JSON Schema properties
-function getSchemaProperties(zodSchema: any): any {
+function getSchemaProperties(zodSchema: any): { properties: any; required: string[] } {
   const shape = zodSchema._def?.shape;
-  if (!shape) return {};
+  if (!shape) return { properties: {}, required: [] };
   
   const properties: any = {};
+  const required: string[] = [];
   
   for (const [key, value] of Object.entries(shape)) {
     const zodType = value as any;
     properties[key] = zodTypeToJsonSchema(zodType);
+    
+    // Check if field is required (not optional)
+    if (zodType._def?.typeName !== 'ZodOptional') {
+      required.push(key);
+    }
   }
   
-  return properties;
+  return { properties, required };
 }
 
 function zodTypeToJsonSchema(zodType: any): any {
   const typeName = zodType._def?.typeName;
+  const description = zodType._def?.description;
+  
+  let schema: any;
   
   switch (typeName) {
     case 'ZodString':
-      return { type: 'string' };
+      schema = { type: 'string' };
+      break;
     case 'ZodNumber':
-      return { type: 'number' };
+      schema = { type: 'number' };
+      break;
     case 'ZodBoolean':
-      return { type: 'boolean' };
+      schema = { type: 'boolean' };
+      break;
     case 'ZodOptional':
       return zodTypeToJsonSchema(zodType._def.innerType);
     case 'ZodArray':
-      return {
+      schema = {
         type: 'array',
         items: zodTypeToJsonSchema(zodType._def.type),
       };
+      break;
     case 'ZodObject':
       const shape = zodType._def?.shape;
-      if (!shape) return { type: 'object' };
-      
-      const properties: any = {};
-      for (const [key, value] of Object.entries(shape)) {
-        properties[key] = zodTypeToJsonSchema(value as any);
+      if (!shape) {
+        schema = { type: 'object' };
+        break;
       }
       
-      return {
+      const properties: any = {};
+      const required: string[] = [];
+      for (const [key, value] of Object.entries(shape)) {
+        properties[key] = zodTypeToJsonSchema(value as any);
+        const valueType = value as any;
+        if (valueType._def?.typeName !== 'ZodOptional') {
+          required.push(key);
+        }
+      }
+      
+      schema = {
         type: 'object',
         properties,
         additionalProperties: false,
       };
+      if (required.length > 0) {
+        schema.required = required;
+      }
+      break;
     case 'ZodRefined':
       // Handle refined schemas (like our journal line validation)
       return zodTypeToJsonSchema(zodType._def.schema);
     case 'ZodEnum':
-      return {
+      schema = {
         type: 'string',
         enum: zodType._def.values,
       };
+      break;
     case 'ZodUnion':
       // Handle union types
-      return {
+      schema = {
         oneOf: zodType._def.options.map((option: any) => zodTypeToJsonSchema(option)),
       };
+      break;
     default:
-      return { type: 'string' };
+      schema = { type: 'string' };
   }
+  
+  // Add description if present
+  if (description) {
+    schema.description = description;
+  }
+  
+  return schema;
 }
 
 // Handle tool calls
@@ -177,14 +218,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 
   try {
-    // Debug logging for journal entry tool
-    if (name === 'payday_create_journal_entry' && args) {
-      console.error('[DEBUG] Raw args received:', JSON.stringify(args, null, 2));
-      console.error('[DEBUG] Type of args:', typeof args);
-      console.error('[DEBUG] Type of args.lines:', typeof (args as any).lines);
+    // Debug logging for journal entry tool (only when DEBUG=1)
+    if (process.env.DEBUG === '1' && name === 'payday_create_journal_entry' && args) {
+      console.error('[DEBUG] Journal entry args type:', typeof args);
+      console.error('[DEBUG] Lines type:', typeof (args as any).lines);
       if ((args as any).lines) {
-        console.error('[DEBUG] Is args.lines an array?:', Array.isArray((args as any).lines));
-        console.error('[DEBUG] args.lines value:', (args as any).lines);
+        console.error('[DEBUG] Is lines array?:', Array.isArray((args as any).lines));
+        console.error('[DEBUG] Lines count:', Array.isArray((args as any).lines) ? (args as any).lines.length : 'N/A');
       }
     }
     
@@ -194,11 +234,17 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     // Check if lines is a string that needs to be parsed as JSON
     if (name === 'payday_create_journal_entry' && typeof processedArgs.lines === 'string') {
       try {
-        console.error('[DEBUG] Attempting to parse lines as JSON string...');
+        if (process.env.DEBUG === '1') {
+          console.error('[DEBUG] Attempting to parse lines as JSON string...');
+        }
         processedArgs.lines = JSON.parse(processedArgs.lines);
-        console.error('[DEBUG] Successfully parsed lines:', processedArgs.lines);
+        if (process.env.DEBUG === '1') {
+          console.error('[DEBUG] Successfully parsed lines count:', Array.isArray(processedArgs.lines) ? processedArgs.lines.length : 'N/A');
+        }
       } catch (e: any) {
-        console.error('[DEBUG] Failed to parse lines as JSON:', e.message);
+        if (process.env.DEBUG === '1') {
+          console.error('[DEBUG] Failed to parse lines as JSON:', e.message);
+        }
       }
     }
     
@@ -207,7 +253,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       if (typeof value === 'string' && (value.startsWith('[') || value.startsWith('{'))) {
         try {
           processedArgs[key] = JSON.parse(value);
-          console.error(`[DEBUG] Parsed ${key} from JSON string`);
+          if (process.env.DEBUG === '1') {
+            console.error(`[DEBUG] Parsed ${key} from JSON string`);
+          }
         } catch (e) {
           // Keep as string if parse fails
         }
@@ -216,9 +264,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     
     // Special validation to catch underscore parameter mistakes (Payday uses camelCase)
     if (name === 'payday_update_invoice' || name === 'payday_get_invoices' || name === 'payday_get_invoice' || name === 'payday_get_customer') {
-      console.error('[DEBUG] Invoice update args received:', JSON.stringify(processedArgs, null, 2));
+      if (process.env.DEBUG === '1') {
+        console.error('[DEBUG] Invoice/customer tool args keys:', Object.keys(processedArgs));
+      }
       const argKeys = Object.keys(processedArgs);
-      console.error('[DEBUG] Parameter keys:', argKeys);
       
       if (argKeys.includes('invoice_id')) {
         return {

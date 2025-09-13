@@ -6,7 +6,7 @@ A Model Context Protocol (MCP) server that provides secure, read-only access to 
 
 - 🔐 **OAuth2 authentication** with automatic token refresh
 - 👥 **Multi-profile support** for test/production environments  
-- 📊 **8 GET-only tools** for customers, invoices, expenses, and payments
+- 📊 **Complete tool suite** including read, write, and SQLite tools for customers, invoices, expenses, payments, and accounting
 - 🚦 **Rate limit tracking** with headers exposed via dedicated tool
 - ⚡ **Auto-retry on 401** with token refresh (once per call)
 - 🛡️ **Privacy-focused** - no logging of secrets or PII
@@ -96,52 +96,74 @@ Replace `C:\\path\\to\\payday-mcp` with your actual installation path.
 
 ## Available Tools
 
-### 1. `payday.show_profile`
-Shows current profile configuration.
-- **Output**: profile name, base URL, company ID, read-only flag
+### Meta Tools
+- **`payday_show_profile`** - Shows current profile configuration
+- **`payday_healthcheck`** - Verifies API connectivity and authentication
+- **`payday_rate_limit_status`** - Returns rate limit info from last API call
 
-### 2. `payday.healthcheck`  
-Verifies API connectivity and authentication.
-- **Output**: status, authentication state, response time
+### Data Retrieval Tools
+- **`payday_get_company`** - Get company information
+- **`payday_get_customers`** - Fetch customers with pagination and search
+  - Parameters: `query?`, `page?=1`, `perpage?=50`
+- **`payday_get_customer`** - Get specific customer by ID
+  - Parameters: `customerId` (required)
+- **`payday_get_invoices`** - Retrieve invoices with flexible filtering
+  - Parameters: `customerId?`, `excludeStatus?`, `dateFrom?`, `dateTo?`, `page?=1`, `perpage?=50`, `include?`
+- **`payday_get_invoice`** - Get specific invoice by ID
+  - Parameters: `invoiceId` (required), `include?`
+- **`payday_get_expenses`** - Fetch expenses with date and query filtering
+  - Parameters: `from?`, `to?`, `query?`, `page?=1`, `perpage?=100`, `include?`
+- **`payday_get_payments`** - Get payments within date range
+  - Parameters: `from?`, `to?`, `page?=1`, `perpage?=100`
+- **`payday_get_payment_types`** - List all payment types (bank accounts)
+- **`payday_get_sales_orders`** - Get sales orders with pagination
+  - Parameters: `page?=1`, `perpage?=50`, `include?`
 
-### 3. `payday.rate_limit_status`
-Returns rate limit info from the last API call.
-- **Output**: limit, remaining, reset timestamp
+### Accounting Tools
+- **`payday_get_accounts`** - Get chart of accounts
+  - Parameters: `page?=1`, `perpage?=50`
+- **`payday_get_account_statement`** - Get account statement with transactions
+  - Parameters: `dateFrom?`, `dateTo?`, `createdFrom?`, `createdTo?`, `accountCode?`, `accountType?`, `accountSubType?`
+- **`payday_get_expense_accounts`** - List expense accounts
+- **`payday_get_expense_payment_types`** - List expense payment types
+- **`payday_get_journal_entries`** - Get journal entries with pagination
+  - Parameters: `page?=1`, `perpage?=50`
 
-### 4. `payday.get_customers`
-Fetches customers with pagination and search.
-- **Input**: `query?`, `page?=1`, `perpage?=50`
-- **Output**: customer list with pagination meta
+### Write Operations (requires read_only: false)
+- **`payday_update_invoice`** - Update invoice status, mark as paid, etc.
+  - Parameters: `invoiceId`, `mode`, `status?`, `paidDate?`, `paymentType?`
+- **`payday_create_journal_entry`** - Create accounting journal entries
+  - Parameters: `date`, `description`, `lines[]`, `status?`
+- **`payday_update_journal_entry`** - Post draft journal entries
+  - Parameters: `journalId`, `status`
 
-### 5. `payday.get_customer`
-Gets a specific customer by ID.
-- **Input**: `customer_id` (required)
-- **Output**: customer details
+### Bank Transaction Tools
+- **`payday_get_bank_transactions`** - Get bank account and credit card transactions
+  - Parameters: `fromDate?`, `toDate?`, `accountNumber?`, `accountType?`, `limit?=100`
+  - Returns: Transaction history with dates, descriptions, amounts, balances, and account details
 
-### 6. `payday.get_invoices`
-Retrieves invoices with flexible filtering.
-- **Input**: `customer_id?`, `status?`, `from?`, `to?`, `page?=1`, `perpage?=50`, `include?`
-- **Route**: `/customers/:id/invoices` if customer_id provided, else `/invoices`
-
-### 7. `payday.get_expenses`
-Fetches expenses with date and query filtering.
-- **Input**: `from?`, `to?`, `query?`, `page?=1`, `perpage?=100`, `include?`
-- **Output**: expense list with pagination
-
-### 8. `payday.get_payments`
-Gets payments within date range.
-- **Input**: `from?`, `to?`, `page?=1`, `perpage?=100`
-- **Output**: payment list with pagination
+### SQLite Tools (read-only database access)
+- **`sqlite_list_objects`** - List database tables and views
+- **`sqlite_table_info`** - Get table structure and column info
+  - Parameters: `table_name`
+- **`sqlite_explain`** - Explain SQL query execution plan
+  - Parameters: `query`
+- **`sqlite_sql_select`** - Execute SELECT queries on database
+  - Parameters: `query`
 
 ## Usage Examples
 
 After configuring Claude Desktop, use natural language prompts:
 
-- **"Use payday.get_invoices for Aug–Sep 2025, unpaid only, include lines, perpage=100; summarize totals by customer."**
+- **"Use payday_get_invoices for Aug–Sep 2025, unpaid only, include lines, perpage=100; summarize totals by customer."**
 - **"Search customers query='Dúfan', perpage=50; show ids and emails only."**
-- **"Expenses from 2025-07-01 to 2025-08-31, query='payday', include lines; return first 2 pages."**
-- **"Show me the current rate limit status"**
-- **"Check if the API is healthy"**
+- **"Get expenses from 2025-07-01 to 2025-08-31, query='payday', include lines; return first 2 pages."**
+- **"Mark invoice 1165 as paid on 2025-01-15 using payment type from payday_get_payment_types"**
+- **"Create a journal entry for office supplies expense of 50,000 ISK with 24% VAT"**
+- **"Show me bank transactions from last month for all accounts and credit cards"**
+- **"Get transactions from account 0133-26-007035 between 2025-08-01 and 2025-08-31"**
+- **"Show me the current rate limit status and check if the API is healthy"**
+- **"List all tables in the SQLite database and show invoice data structure"**
 
 ## Tool Response Format
 
@@ -266,3 +288,55 @@ For issues:
 3. Ensure Claude Desktop has the correct path
 4. Check API connectivity with `payday.healthcheck`
 5. Refer to the official Payday API docs: https://apidoc.payday.is/
+
+## Bank Integration (Landsbankinn B2B)
+
+This repo includes a lightweight Landsbankinn B2B client (Landsbankaskema, XML over HTTPS) to fetch bank and credit card data and build a queryable local dataset for monthly reconciliation.
+
+Prerequisites
+- Fill `.env` with:
+  - `LBIN_BASE_URL` (defaults to `https://b2b.fbl.is/process.ashx`)
+  - `LBIN_COMPANY_ID` (10 digits, no hyphen)
+  - `LBIN_USERNAME` (8–16 chars) and `LBIN_PASSWORD` (5–12 chars)
+  - Optional mTLS: `LBIN_CERT_PATH`, `LBIN_KEY_PATH`, `LBIN_KEY_PASSPHRASE`
+- Add your accounts to `Bank/accounts.json` (format: 4-2-6 account numbers with friendly names).
+
+Quick Tests
+- Minimal login (verifies credentials):
+  - `node Bank/test-lbin-connection.js`
+- Test a single bank account (4-2-6 number):
+  - `node Bank/test-one-account.js 0133-26-007035`
+- List credit cards for the company user:
+  - `node Bank/card-list.js`
+
+Fetch Raw XML (Raw Zone)
+- Fetch monthly XML for all accounts and credit cards from 2022-01-01 → today and store under `Bank/RawData`:
+  - `node Bank/fetch-raw.js`
+- Optional: set a different start date
+  - PowerShell: `$env:LBIN_FETCH_FROM="2024-01-01"; node Bank/fetch-raw.js`
+  - Bash: `LBIN_FETCH_FROM=2024-01-01 node Bank/fetch-raw.js`
+
+Transform to SQLite (Silver Layer + Gold Views)
+- Parse all raw XML into `sqlite/finance.db` with idempotent upserts:
+  - `node Bank/parse-raw.js`
+- List tables and views:
+  - `sqlite3 sqlite/finance.db ".tables"`
+- Example queries:
+  - Bank monthly: `sqlite3 sqlite/finance.db "SELECT * FROM gold_bank_monthly ORDER BY month DESC LIMIT 50;"`
+  - Card monthly: `sqlite3 sqlite/finance.db "SELECT * FROM gold_card_monthly ORDER BY month DESC LIMIT 50;"`
+
+Data Layout
+- Raw (audit):
+  - `Bank/RawData/accounts/<branch-ledger-account>/<YYYY-MM>.xml`
+  - `Bank/RawData/cards/<card_id>/<YYYY-MM>.xml`
+- SQLite (silver):
+  - `silver_bank_accounts`, `silver_bank_transactions`
+  - `silver_credit_cards`, `silver_creditcard_transactions`
+- SQLite (gold views):
+  - `gold_bank_monthly`, `gold_card_monthly`
+
+Notes
+- Protocol: Landsbankaskema XML endpoints with session login (`LI_Innskra` → `<seta>`), text/xml headers, and logout (`LI_Utskra`) after batch runs.
+- Accounts: use nested `<reikningur><utibu/><hb/><reikningsnr/></reikningur>` per XSD.
+- Credit cards: list via `LI_Get_CreditcardList` (v1.2, `<session_id>`), fetch transactions with `LI_Get_Creditcard_Transactions` using `time_period` or `payment_period`.
+- Re-running fetch or parse is safe; upserts prevent duplicates and raw XML is never modified.

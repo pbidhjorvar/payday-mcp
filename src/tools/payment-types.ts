@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { PaydayClient } from '../http/paydayClient.js';
 import { getPaymentTypesSchema } from '../types/schemas.js';
 import { Profile } from '../config/profiles.js';
+import { createApiError } from '../http/errors.js';
 
 export async function getPaymentTypes(
   _input: z.infer<typeof getPaymentTypesSchema>,
@@ -21,15 +22,16 @@ export async function getPaymentTypes(
       data: result,
     };
   } catch (error) {
-    return {
-      ok: false,
-      error: error instanceof Error ? error.message : 'Failed to fetch payment types',
-    };
+    return createApiError(
+      500,
+      'UNKNOWN_ERROR',
+      error instanceof Error ? error.message : 'Failed to fetch payment types'
+    );
   }
 }
 
 export const getPaymentTypesTool = {
-  name: 'payment-types-list',
+  name: 'payday_get_payment_types',
   description: 'List all payment types (bank accounts) configured in Payday',
   inputSchema: getPaymentTypesSchema,
   handler: getPaymentTypes,

@@ -30,11 +30,16 @@ The server automatically handles OAuth2 authentication and supports multiple pro
 ### 💸 **Expenses & Payments**
 - `payday_get_expenses` - List expenses with filtering
 - `payday_get_expense_accounts` - Get expense account types
-- `payment_types_list` - Get payment types/bank accounts configured in Payday
+- `payday_get_payment_types` - Get payment types/bank accounts configured in Payday
 - `payday_get_payments` - List payment records
 
 ### 📋 **Sales Orders**
 - `payday_get_salesorders` - List sales orders
+
+### 🏦 **Bank Transactions**
+- `payday_get_bank_transactions` - Get bank account and credit card transactions from local SQLite database
+  - Parameters: `fromDate?`, `toDate?`, `accountNumber?`, `accountType?` (bank/card/all), `limit?=100`
+  - Returns: Transaction history with dates, descriptions, amounts, balances, and account details
 
 ### 🔍 **System Tools**
 - `payday_healthcheck` - Check API connectivity
@@ -215,7 +220,7 @@ When working with invoices, you can use either:
 **⚠️ PAYDAY RULE: NO UNDERSCORES in parameter names! Always use camelCase (e.g., `customerId`, `invoiceId`, `paymentType`)**
 
 **📋 STEP-BY-STEP for marking invoice as paid:**
-1. Get payment types: `payment-types-list` tool
+1. Get payment types: `payday_get_payment_types` tool
 2. Find the payment type UUID you want to use
 3. Call `payday_update_invoice` with ALL required parameters:
    - `invoiceId` (number or UUID - NO UNDERSCORES!)
@@ -248,7 +253,7 @@ When working with invoices, you can use either:
 - `bae09c55-114e-41fc-8628-f96540a0c1f7` - EUR Reikningur
 - `6ac48f07-26e6-4819-b798-e94e85f20b69` - Kreditkort
 
-Use `payment-types-list` tool to get the complete current list.
+Use `payday_get_payment_types` tool to get the complete current list.
 
 ### Journal Entry Requirements
 Each journal line must have **exactly one** of:
@@ -294,8 +299,14 @@ sqlite_sql_select({
 4. `payday_update_invoice` to mark as paid if needed
 
 ### Payment Types Management
-1. `payment_types_list` - Get all bank accounts/payment methods
+1. `payday_get_payment_types` - Get all bank accounts/payment methods
 2. Use payment type IDs in invoice updates and journal entries
+
+### Bank Transaction Analysis
+1. `payday_get_bank_transactions` - Get transaction history from all accounts and cards
+2. Filter by date range, account number, or account type
+3. Analyze spending patterns and match transactions to invoices/expenses
+4. Use for reconciliation and cash flow analysis
 
 ## Error Handling
 Tools return structured error responses:
