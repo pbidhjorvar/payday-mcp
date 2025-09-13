@@ -68,25 +68,25 @@ export async function getBankTransactions(
       let bankQuery = `
         SELECT 
           'bank' as account_type,
-          account_number,
-          date,
+          (branch || '-' || ledger || '-' || account_no) as account_number,
+          value_date as date,
           description,
           amount,
           balance,
-          reference_number,
+          reference as reference_number,
           currency,
-          transaction_type
+          type_code as transaction_type
         FROM silver_bank_transactions 
-        ${dateFilter}
+        ${dateFilter.replace('date', 'value_date')}
       `;
       
       if (input.accountNumber) {
         bankQuery += dateConditions.length > 0 ? ' AND ' : ' WHERE ';
-        bankQuery += 'account_number = $accountNumber';
+        bankQuery += '(branch || \'-\' || ledger || \'-\' || account_no) = $accountNumber';
         params.accountNumber = input.accountNumber;
       }
       
-      bankQuery += ' ORDER BY date DESC, account_number';
+      bankQuery += ' ORDER BY value_date DESC, account_number';
       
       if (input.limit) {
         bankQuery += ` LIMIT $limit`;
@@ -103,7 +103,7 @@ export async function getBankTransactions(
         SELECT 
           'card' as account_type,
           card_id as account_number,
-          transaction_date as date,
+          date,
           description,
           amount,
           NULL as balance,
@@ -111,9 +111,9 @@ export async function getBankTransactions(
           currency,
           'CARD_TRANSACTION' as transaction_type,
           merchant_name,
-          card_number_masked
+          NULL as card_number_masked
         FROM silver_creditcard_transactions 
-        ${dateFilter.replace('date', 'transaction_date')}
+        ${dateFilter}
       `;
       
       if (input.accountNumber) {
@@ -121,7 +121,7 @@ export async function getBankTransactions(
         params.accountNumber = input.accountNumber;
       }
       
-      cardQuery += ' ORDER BY transaction_date DESC, card_id';
+      cardQuery += ' ORDER BY date DESC, card_id';
       
       if (input.limit) {
         cardQuery += ` LIMIT $limit`;
