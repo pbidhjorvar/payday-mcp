@@ -197,7 +197,7 @@ export async function getBankTransactions(
 }
 
 export const getBankTransactionsTool = {
-  name: 'payday_get_bank_transactions',
+  name: 'bank_get_bank_transactions',
   description: 'Get bank account and credit card transactions from local SQLite database. Returns transaction history with dates, descriptions, amounts, and account details.',
   inputSchema: getBankTransactionsSchema,
   handler: getBankTransactions,

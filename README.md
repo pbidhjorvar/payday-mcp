@@ -138,7 +138,7 @@ Replace `C:\\path\\to\\payday-mcp` with your actual installation path.
   - Parameters: `journalId`, `status`
 
 ### Bank Transaction Tools
-- **`payday_get_bank_transactions`** - Get bank account and credit card transactions
+- **`bank_get_bank_transactions`** - Get bank account and credit card transactions
   - Parameters: `fromDate?`, `toDate?`, `accountNumber?`, `accountType?`, `limit?=100`
   - Returns: Transaction history with dates, descriptions, amounts, balances, and account details
 

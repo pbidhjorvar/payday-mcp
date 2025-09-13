@@ -37,7 +37,7 @@ The server automatically handles OAuth2 authentication and supports multiple pro
 - `payday_get_salesorders` - List sales orders
 
 ### 🏦 **Bank Transactions**
-- `payday_get_bank_transactions` - Get bank account and credit card transactions from local SQLite database
+- `bank_get_bank_transactions` - Get bank account and credit card transactions from local SQLite database
   - Parameters: `fromDate?`, `toDate?`, `accountNumber?`, `accountType?` (bank/card/all), `limit?=100`
   - Returns: Transaction history with dates, descriptions, amounts, balances, and account details
 
@@ -303,7 +303,7 @@ sqlite_sql_select({
 2. Use payment type IDs in invoice updates and journal entries
 
 ### Bank Transaction Analysis
-1. `payday_get_bank_transactions` - Get transaction history from all accounts and cards
+1. `bank_get_bank_transactions` - Get transaction history from all accounts and cards
 2. Filter by date range, account number, or account type
 3. Analyze spending patterns and match transactions to invoices/expenses
 4. Use for reconciliation and cash flow analysis
